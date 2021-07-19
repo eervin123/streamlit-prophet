@@ -13,7 +13,7 @@ yfinance
 
 To run type `streamlit run main.py`
 
-# TODO
+### TODO
 
 Create several new features enabling the manual selection of a time period for training, creating training on model portfolios built using the ORA tools pages, etc.  
 
