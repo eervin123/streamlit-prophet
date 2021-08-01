@@ -1,4 +1,5 @@
 # pip install streamlit fbprophet yfinance plotly
+from matplotlib.pyplot import title
 import streamlit as st
 
 import datetime as dt
@@ -12,7 +13,6 @@ import pandas as pd
 st.set_page_config(layout="wide")
 st.title("Time Series Forecasting Application")
 st.write("This was inspired by [PythonEngineer's Youtube Video] (https://www.youtube.com/watch?v=0E_31WqVzCY)")
-st.text("Data Sourced from Yahoo")
 
 START = "1993-01-01"
 TODAY = dt.date.today().strftime("%Y-%m-%d")
@@ -38,14 +38,16 @@ def load_data(ticker, start_date=START):
 
 # Prepare the layout to have two containers because Streamlit is run in order
 plot_output1 = st.beta_container()
+calc_container = st.beta_container()
 plot_output2 = st.beta_container()
 
 def plot_raw_data():
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=data["Date"], y=data["Close"], name="Close"))
-    fig.layout.update(
-        title_text="Raw Data", title_x = 0.5, xaxis_rangeslider_visible=True
+    fig.layout.update(autosize=True,
+        title_text=f"Raw Price Data For {selected_ticker}", title_x = 0.5, title_y = .7
     )
+    fig.update_layout(margin_b=0, margin_t=0, margin_r=0,margin_l=0, height=300)
     plot_output1.plotly_chart(fig, use_container_width=True)
 
 #Create the menu items on left Sidebar
@@ -59,29 +61,36 @@ n_months = st.sidebar.slider("Months of prediction:", 1, 48)
 days = n_months * 30
 # Now enable the user to fine tune the hyperparameters
 # TODO: need to add tooltips explaining these
-st.sidebar.write("Set Up Hyperparameters [Read More Here] (https://towardsdatascience.com/time-series-analysis-with-facebook-prophet-how-it-works-and-how-to-use-it-f15ecf2c0e3a)")
-cp_range = st.sidebar.number_input("Pct of data to train on", min_value=0.0, max_value=1.0, value=0.8) 
-cp_scale = st.sidebar.number_input("Changepoint Scale", min_value=0.01, max_value=1.0, value=0.05) 
-cp_num = st.sidebar.number_input("Number of Changepoints", value=10) 
+
+with st.sidebar:
+    my_expander = st.beta_expander(label="Tune Hyperparameters?")
+    with my_expander:
+        st.write("Set Up Hyperparameters [Read More Here] (https://towardsdatascience.com/time-series-analysis-with-facebook-prophet-how-it-works-and-how-to-use-it-f15ecf2c0e3a)")
+        cp_range = st.number_input("Pct of data to train on", min_value=0.0, max_value=1.0, value=0.8) 
+        cp_scale = st.number_input("Changepoint Scale", min_value=0.01, max_value=1.0, value=0.05) 
+        cp_num = st.number_input("Number of Changepoints", value=int(10)) 
+    
 plot_raw_data()
-with plot_output1: st.header("Choose Your Parameters on the Left then Calculate")
+# with plot_output1: st.header("Choose Your Parameters on the Left then Calculate")
 # Predict forecast with Prophet.
-with st.sidebar.form(key="forecast"):
+with st.form(key="calc"):
     submitted = st.form_submit_button("Calculate")
     if submitted: 
         #set up training dataframe
+        calc_container.write("Calculating Forecast...")
+        st.spinner()
         df_train = data[["Date","Close"]] 
 
         df_train = df_train.rename(columns={"Date": "ds", "Close": "y"})
 
-        m = Prophet(changepoint_range=cp_range,changepoint_prior_scale=cp_scale, n_changepoints=cp_num)
+        m = Prophet(changepoint_range=cp_range,changepoint_prior_scale=cp_scale, n_changepoints=int(cp_num))
         m.fit(df_train)
         future = m.make_future_dataframe(periods=days)
         forecast = m.predict(future)
-        
+        st.write(f"Forecast for {n_months} months")
         # Show and plot forecast
-        plot_output2.write(f"Forecast plot for {n_months} months")
         fig1 = plot_plotly(m, forecast)
+        fig1.update_layout(margin_b=0, margin_t=0, margin_r=0,margin_l=0)
         plot_output2.plotly_chart(fig1,use_container_width=True)
         # a = add_changepoints_to_plot(fig1,m,forecast)
         plot_output2.subheader("Forecast data")
