@@ -20,5 +20,3 @@ Create several new features enabling the manual selection of a time period for t
 Also would like to set up some training for evaluating optimal rebalance frequencies based on various assets to help optimize portfolio allocations.
 
 One other thing would be to run this on volatility to try to predict volatility going forward. FB Prophet is known for its strengths with seasonality benefits. 
-
-Testing Github
