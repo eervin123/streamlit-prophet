@@ -5,8 +5,8 @@ import time
 import datetime as dt
 from datetime import datetime
 import yfinance as yf
-from fbprophet import Prophet
-from fbprophet.plot import plot_plotly, add_changepoints_to_plot
+from prophet import Prophet
+from prophet.plot import plot_plotly, add_changepoints_to_plot
 from plotly import graph_objs as go
 import pandas as pd
 
@@ -37,9 +37,9 @@ def load_data(ticker, start_date=START, end_date=TODAY):
     return data
 
 # Prepare the layout to have containers because Streamlit is run in order
-plot_output1 = st.beta_container()
-calc_container = st.beta_container()
-plot_output2 = st.beta_container()
+plot_output1 = st.container()
+calc_container = st.container()
+plot_output2 = st.container()
 
 def plot_raw_data():
     fig = go.Figure()
@@ -58,19 +58,19 @@ end_date = st.sidebar.text_input("Type a enddate for your date range YYYY-MM-DD 
 data = load_data(selected_ticker, start_date, end_date)
 
 st.sidebar.write("Select Prediction Range")
-n_months = st.sidebar.slider("Months of prediction:", 1, 48)
-days = n_months * 30
+days = st.sidebar.slider("Days of prediction:", 0, 730, value=365, step=5)
+# days = n_months * 30
 # Now enable the user to fine tune the hyperparameters
 # TODO: need to add tooltips explaining these
 
 with st.sidebar:
-    my_expander = st.beta_expander(label="Tune Hyperparameters?")
+    my_expander = st.expander(label="Tune Hyperparameters?", expanded=True)
     with my_expander:
         st.write("Set Up Hyperparameters [Read More Here] (https://towardsdatascience.com/time-series-analysis-with-facebook-prophet-how-it-works-and-how-to-use-it-f15ecf2c0e3a)")
-        cp_range = st.number_input("Pct of data to train on", min_value=0.0, max_value=1.0, value=0.8) 
-        cp_scale = st.number_input("Changepoint Scale", min_value=0.01, max_value=1.0, value=0.10) 
+        cp_range = st.number_input("Pct of data to train on", min_value=0.0, max_value=1.0, value=1.0) 
+        cp_scale = st.number_input("Changepoint Scale", min_value=0.01, max_value=1.0, value=0.20) 
         cp_num = st.number_input("Number of Changepoints", value=10) 
-    
+
 plot_raw_data()
 # with plot_output1: st.header("Choose Your Parameters on the Left then Calculate")
 # Predict forecast with Prophet.
@@ -81,7 +81,7 @@ with calc_container:
             #set up training dataframe
             st.spinner()
             start = time.time()
-            with st.spinner(text=f"Calculating the forecast for {n_months} months"):
+            with st.spinner(text=f"Calculating the forecast for {days} days"):
                 df_train = data[["Date","Close"]]
                 df_train = df_train.rename(columns={"Date": "ds", "Close": "y"})
                 m = Prophet(changepoint_range=cp_range,changepoint_prior_scale=cp_scale, n_changepoints=int(cp_num))
@@ -107,3 +107,4 @@ with calc_container:
                 st.success(f"Forecast Completed in {runtime} seconds")
 
 st.sidebar.write("This was inspired by [PythonEngineer's Youtube Video] (https://www.youtube.com/watch?v=0E_31WqVzCY)")
+st.sidebar.write("Author: Eric Ervin, Blockforce Capital & Onramp Invest")
