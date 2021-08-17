@@ -1,4 +1,4 @@
-prophet
 streamlit
 yfinance
 plotly
+prophet
