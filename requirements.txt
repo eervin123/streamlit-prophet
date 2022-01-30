@@ -2,4 +2,3 @@ streamlit
 yfinance
 plotly
 prophet
-math
