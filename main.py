@@ -54,7 +54,6 @@ item_names = {
 }
 
 def get_key_by_value(dictOfElements: dict, valueToFind: str) ->str:
-
     listOfItems = dictOfElements.items()
     for item  in listOfItems:
         if item[1] == valueToFind:
@@ -112,7 +111,7 @@ selected_ticker = st.sidebar.selectbox("Select dataset for prediction", assets)
 start_date = st.sidebar.text_input("Type a startdate for your date range YYYY-MM-DD Format Note, this will be UTC Time", START)
 end_date = st.sidebar.text_input("Type a enddate for your date range YYYY-MM-DD Format Note this will be UTC Time", TODAY)
 data = load_data(selected_ticker, start_date, end_date)
-data = add_rolling_metrics_to_dataframe(data, num_days) # I think I will remove this for now
+# data = add_rolling_metrics_to_dataframe(data, num_days) # I think I will remove this for now
 
 st.sidebar.write("Select Prediction Range")
 days = st.sidebar.slider("Days of prediction:", 0, 730, value=30, step=5)
@@ -132,9 +131,12 @@ with st.sidebar:
 # Adding functionality for Volatility Prediction
 
 with plot_output1:
-    prediction_statistic = st.radio("What would you like to analyze and predict? ", item_names.values())
-    column_name = get_key_by_value(item_names, prediction_statistic)
+    # I'll add the radio button below to enable them to predict other factors like volatility etc.
+#     prediction_statistic = st.radio("What would you like to analyze and predict? ", item_names.values())
+#     column_name = get_key_by_value(item_names, prediction_statistic)
+    column_name = "Close" # Comment this out when we add the radio button above
     plot_raw(data,column_name)   
+    
 
 # with plot_output1: st.header("Choose Your Parameters on the Left then Calculate")
 # Predict forecast with Prophet.
@@ -166,7 +168,7 @@ with backtest_container:
         if backtest_submitted: 
             st.spinner()
             start = time.time()
-            with st.spinner(text=f"Calculating the forecast for {days} days"):
+            with st.spinner(text=f"Calculating backtest and plotting trades."):
                 df_train, m, forecast = run_model(data)
                 plot_forecast(df_train, m, forecast)
                 st.header("Backtest based on prediction Model")
